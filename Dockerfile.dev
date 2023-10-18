@@ -1,0 +1,29 @@
+FROM python:3.10
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONASYNCIODEBUG 1
+
+RUN pip install --upgrade pip
+
+RUN pip install poetry
+
+COPY pyproject.toml ./
+COPY poetry.lock ./
+
+RUN poetry install --no-dev
+
+ENV PYTHONPATH=./app
+
+COPY rsa*.* /app/
+COPY ed25519*.* /app/
+
+CMD [ "poetry", "run", "uvicorn", \
+"--reload", \
+"--reload-include", "*.sql", \
+"--host", "0.0.0.0", \
+"--port", "8000", \
+"app.main:app" \
+]

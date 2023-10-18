@@ -1,0 +1,31 @@
+FROM python:3.10
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONOPTIMIZE 1
+
+RUN pip install --upgrade pip
+
+RUN pip install poetry
+
+COPY pyproject.toml ./
+COPY poetry.lock ./
+
+RUN poetry install --no-dev
+
+COPY . .
+
+ENV PYTHONPATH=./app
+
+CMD [ "poetry", "run", "gunicorn", \
+"-w", "4", \
+"-k", "uvicorn.workers.UvicornWorker", \
+"--bind", "127.0.0.1:8000", \
+"--access-logfile", "/var/log/randomall/access.log", \
+"--log-file", "/var/log/randomall/error.log", \
+"--max-requests", "8192", \
+"--max-requests-jitter", "200", \
+"app.main:app" \
+]
